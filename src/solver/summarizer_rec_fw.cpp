@@ -112,6 +112,30 @@ void summarizer_rec_fwt::do_summary(
   ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
   
+  if(recursive)
+  {
+    exprt merge_expr;
+    template_gen_rec_summaryt template_generator=template_gen_rec_summaryt(
+    options, ssa_db, ssa_unwinder.get(function_name));
+    template_generator.set_message_handler(get_message_handler());
+    template_generator(function_name, solver.next_domain_number(),
+     SSA, merge_expr, true);
+    
+    exprt precond(summary.fw_precondition);
+    if(context_sensitive)
+      replace_expr(template_generator.init_vars_map,precond);
+    
+    exprt::operandst conds;
+    conds.reserve(5);
+    conds.push_back(cond);
+    conds.push_back(precond);
+    conds.push_back(ssa_inliner.get_summaries(SSA));
+    cond=conjunction(conds);
+    
+    analyzer(solver, SSA, cond, template_generator, true, merge_expr);
+    analyzer.get_result(summary.fw_transformer, template_generator.inout_vars());
+    analyzer.get_result(summary.fw_invariant, template_generator.loop_vars());
+  }
   else
   {
     template_generator_summaryt template_generator=template_generator_summaryt(

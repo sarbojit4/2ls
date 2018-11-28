@@ -53,12 +53,13 @@ Author: Daniel Kroening, Peter Schrammel
 #include "summary_checker_bmc.h"
 #include "summary_checker_kind.h"
 #include "summary_checker_nonterm.h"
+#include "summary_checker_rect.h"
 #include "show.h"
 #include "horn_encoding.h"
 
 #define UNWIND_GOTO_INTO_LOOP 0
 #define REMOVE_MULTIPLE_DEREFERENCES 1
-#define IGNORE_RECURSION 1
+#define IGNORE_RECURSION 0
 #define IGNORE_THREADS 1
 #define EXPLICIT_NONDET_LOCALS 0
 #define FILTER_ASSERTIONS 1
@@ -316,6 +317,17 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     if(!cmdline.isset("unwind"))
       options.set_option("unwind", std::numeric_limits<unsigned>::max());
   }
+  
+  //............................................
+  // handle recursive functions
+  if(cmdline.isset("has-recursion"))
+  {
+    if(cmdline.isset("incremental-bmc")||
+       cmdline.isset("k-induction"))
+      status()<<"Ignoring option --has-recursion"<<eom;
+    options.set_option("has-recursion", true);
+  }
+  //.............................................
 
   // check for spuriousness of assertion failures
   if(cmdline.isset("no-spurious-check"))
@@ -582,8 +594,15 @@ int twols_parse_optionst::doit()
     std::unique_ptr<summary_checker_baset> checker;
     if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
-      checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_ait(options, heap_analysis));
+      {
+      if(options.get_bool_option("has-recursion"))
+        checker=std::unique_ptr<summary_checker_baset>(
+          new summary_checker_rect(options, heap_analysis));
+      else
+        checker=std::unique_ptr<summary_checker_baset>(
+          new summary_checker_ait(options, heap_analysis));
+
+    }
     if(options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
@@ -1765,6 +1784,7 @@ void twols_parse_optionst::help()
     " --termination                compute ranking functions to prove termination\n" // NOLINT(*)
     " --k-induction                use k-induction\n"
     " --incremental-bmc            use incremental-bmc\n"
+    " --has-recursion              enable recursive function support"
     " --preconditions              compute preconditions\n"
     " --sufficient                 sufficient preconditions (default: necessary)\n" // NOLINT(*)
     " --havoc                      havoc loops and function calls\n"

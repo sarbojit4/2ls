@@ -53,7 +53,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include "summary_checker_bmc.h"
 #include "summary_checker_kind.h"
 #include "summary_checker_nonterm.h"
-#include "summary_checker_rect.h"
+#include "summary_checker_rec.h"
 #include "show.h"
 #include "horn_encoding.h"
 

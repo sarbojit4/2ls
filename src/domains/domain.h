@@ -145,7 +145,9 @@ protected:
   
   void rename_to_pre(exprt &expr,const exprt &guard)
   {
-    exprt::operandst expr_vec,pre_guards=guard.operands();
+    exprt::operandst expr_vec,pre_guards;
+    if(guard.id()==ID_or) pre_guards=guard.operands();
+    else pre_guards.push_back(guard);
     assert(pre_guards.size()==pre_renaming_map.size());
     exprt::operandst::iterator g_it=pre_guards.begin();
     for(replace_mapt &var_map:pre_renaming_map){

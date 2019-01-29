@@ -193,14 +193,14 @@ exprt template_gen_rec_summaryt::collect_inout_vars(const irep_idt &function_nam
   // add params in var_specs
   add_vars(
     SSA.params,
-    conjunction(pre_guards),
+    disjunction(pre_guards),
     first_guard,
     forward ? domaint::ININD : domaint::OUTIND,
     var_specs);
   // add globals_in in var_specs
   add_vars(
     SSA.globals_in,
-    conjunction(pre_guards),
+    disjunction(pre_guards),
     first_guard,
     forward ? domaint::ININD : domaint::OUTIND,
     var_specs);
@@ -209,7 +209,7 @@ exprt template_gen_rec_summaryt::collect_inout_vars(const irep_idt &function_nam
     SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
   add_vars(
     SSA.globals_out,
-    conjunction(pre_guards),
+    disjunction(pre_guards),
     last_guard,
     forward ? domaint::OUTIND : domaint::ININD,
     var_specs);

@@ -25,6 +25,8 @@ public:
   }
 
   virtual bool iterate(invariantt &inv);
+  bool iterate_for_ins(invariantt &_inv, 
+    const exprt::operandst &conds=exprt::operandst());
 
 protected:
   tpolyhedra_domaint &tpolyhedra_domain;

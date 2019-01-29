@@ -40,7 +40,8 @@ public:
     incremental_solvert &solver,
     local_SSAt &SSA,
     const exprt &precondition,
-    template_generator_baset &template_generator);
+    template_generator_baset &template_generator,
+    const exprt &ssa_addition=true_exprt());
 
   void get_result(exprt &result, const domaint::var_sett &vars);
 

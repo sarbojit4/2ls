@@ -114,12 +114,12 @@ void summarizer_rec_fwt::do_summary(
   
   if(recursive)
   {
-    exprt merge_expr;
+    exprt ssa_addition;//additional expressions to add in the SSA
     template_gen_rec_summaryt template_generator=template_gen_rec_summaryt(
     options, ssa_db, ssa_unwinder.get(function_name));
     template_generator.set_message_handler(get_message_handler());
     template_generator(function_name, solver.next_domain_number(),
-     SSA, merge_expr, true);
+     SSA, ssa_addition, true);
     
     exprt precond(summary.fw_precondition);
     if(context_sensitive)
@@ -132,7 +132,7 @@ void summarizer_rec_fwt::do_summary(
     conds.push_back(ssa_inliner.get_summaries(SSA));
     cond=conjunction(conds);
     
-    analyzer(solver, SSA, cond, template_generator, true, merge_expr);
+    analyzer(solver, SSA, cond, template_generator, true, ssa_addition);
     analyzer.get_result(summary.fw_transformer, template_generator.inout_vars());
     analyzer.get_result(summary.fw_invariant, template_generator.loop_vars());
   }

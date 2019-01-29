@@ -19,7 +19,7 @@
 void template_gen_rec_summaryt::operator()(const irep_idt &function_name,
   unsigned _domain_number,
   const local_SSAt &SSA,
-  exprt &merge_expr,
+  exprt &ssa_addition,
   bool forward)
 {
   domain_number=_domain_number;
@@ -33,9 +33,12 @@ void template_gen_rec_summaryt::operator()(const irep_idt &function_name,
    options.get_bool_option("preconditions"))
   {
     if(options.get_bool_option("context-sensitive"))
-      collect_inout_vars(function_name, SSA, pre_guards, forward);
+      ssa_addition=collect_inout_vars(function_name, SSA, pre_guards, forward);
     else
+    {
+      ssa_addition=true_exprt();
       collect_variables_inout(SSA,forward);
+    }
   }
   
   if(options.get_bool_option("context-sensitive"))
@@ -54,7 +57,7 @@ void template_gen_rec_summaryt::operator()(const irep_idt &function_name,
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns);
   debug()<<"Where:\n";
-  for(const exprt& op:merge_expr.operands())
+  for(const exprt& op:ssa_addition.operands())
   {
     debug()<<"     "<<from_expr(op)<<eom;
   }
@@ -153,7 +156,7 @@ void template_gen_rec_summaryt::create_comb_vars(const irep_idt &function_name,
   comb_guard=disjunction(guards_vec);
 }
 
-void template_gen_rec_summaryt::collect_inout_vars(const irep_idt &function_name,
+exprt template_gen_rec_summaryt::collect_inout_vars(const irep_idt &function_name,
   const local_SSAt &SSA,
   exprt::operandst &pre_guards,
   bool forward)
@@ -209,7 +212,8 @@ void template_gen_rec_summaryt::collect_inout_vars(const irep_idt &function_name
     conjunction(pre_guards),
     last_guard,
     forward ? domaint::OUTIND : domaint::ININD,
-    var_specs); 
+    var_specs);
+  return conjunction(expr_vec);
 }
 
 void template_gen_rec_summaryt::instantiate_domains_for_rec(

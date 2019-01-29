@@ -63,7 +63,8 @@ void ssa_analyzert::operator()(
   incremental_solvert &solver,
   local_SSAt &SSA,
   const exprt &precondition,
-  template_generator_baset &template_generator)
+  template_generator_baset &template_generator,
+  const exprt &ssa_addition)
 {
   if(SSA.goto_function.body.instructions.empty())
     return;
@@ -73,6 +74,7 @@ void ssa_analyzert::operator()(
 
   solver.new_context();
   solver << SSA.get_enabling_exprs();
+  solver << ssa_addition;
 
   // add precondition (or conjunction of asssertion in backward analysis)
   solver << precondition;

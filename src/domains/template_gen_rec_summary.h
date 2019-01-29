@@ -42,7 +42,7 @@ public:
     symbol_exprt &guard_ins, 
     var_listt &rb_vars,
     exprt::operandst &expr_vec);//put expressions like a=guard#ins? a#rb : a#init
-  void collect_inout_vars(const irep_idt &function_name,
+  exprt collect_inout_vars(const irep_idt &function_name,
     const local_SSAt &SSA,
     exprt::operandst &pre_guards,
     bool forward);

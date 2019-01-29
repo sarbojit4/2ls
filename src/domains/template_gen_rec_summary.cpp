@@ -80,3 +80,75 @@ void template_gen_rec_summaryt::create_rb_vars(const local_SSAt &SSA,
     expr_vec.push_back(equal_exprt(var,rhs));
   }
 }
+
+void template_gen_rec_summaryt::create_comb_vars(const irep_idt &function_name,
+  const local_SSAt &SSA,
+  var_listt &comb_vars,
+  exprt::operandst &expr_vec,//put expressions like a#comb=(g0 && dummy0)? a0 : (g1 && dummy1)? a1 : ..... a#nondet
+  exprt &comb_guard,//comb_guard is like (g0 && dummy0) || .... (gK && dummyK)
+  exprt::operandst &pre_guards)
+{
+  exprt::operandst guards_vec,comb_exprs;
+  
+  for(const symbol_exprt& var:SSA.params)
+    get_comb_and_nondet_symb(var, comb_vars, comb_exprs);  
+  for(const symbol_exprt& var:SSA.globals_in)
+    get_comb_and_nondet_symb(var, comb_vars, comb_exprs);
+  
+  for(const local_SSAt::nodet &node:SSA.nodes)
+  {
+    for(const function_application_exprt &f_call:node.function_calls)
+    {
+      if(function_name==to_symbol_expr(f_call.function()).get_identifier()&&
+          f_call.function().id()==ID_symbol)
+      {
+        exprt guard=SSA.guard_symbol(node.location);
+        pre_guards.push_back(guard);
+        replace_mapt r_map;
+        if(options.get_bool_option("context-sensitive"))
+        {
+          symbol_exprt dummy_guard=get_dummy_guard(node.location->location_number);
+          exprt cond=and_exprt(guard,dummy_guard);
+          guards_vec.push_back(cond);
+          std::vector<exprt>::iterator c_it=comb_exprs.begin();
+          local_SSAt::var_listt::const_iterator p_it=SSA.params.begin();
+          for(const exprt &arg:f_call.arguments())
+          {
+            exprt &expr=*c_it;
+            expr=if_exprt(cond,arg,expr);//merging arguments
+            r_map[*p_it]=arg;
+            p_it++;
+            c_it++;
+          }
+          
+          local_SSAt::var_sett::iterator g_it=SSA.globals_in.begin();
+          local_SSAt::var_sett globals_in;
+          SSA.get_globals(node.location,globals_in,true,false);
+          for(exprt g_in:globals_in)
+          {
+            exprt &expr=*c_it;
+            expr=if_exprt(cond,g_in,expr);//merging global_ins
+            r_map[*g_it]=g_in;
+            g_it++;
+            c_it++;
+          }
+        }
+        local_SSAt::var_sett::iterator g_it=SSA.globals_out.begin();
+        local_SSAt::var_sett globals_out;
+        SSA.get_globals(node.location,globals_out,false);
+        for(exprt g_out:globals_out)
+        {
+          r_map[*g_it]=g_out;
+        }
+        pre_renaming_maps.push_back(r_map);
+      }
+    }
+  }
+
+  unsigned size=SSA.params.size()+SSA.globals_in.size();
+  for(unsigned i=0;i<size;i++)
+  {
+    expr_vec.push_back(equal_exprt(comb_vars.at(i),comb_exprs.at(i)));
+  }
+  comb_guard=disjunction(guards_vec);
+}

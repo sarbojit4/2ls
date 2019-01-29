@@ -41,7 +41,8 @@ public:
     local_SSAt &SSA,
     const exprt &precondition,
     template_generator_baset &template_generator,
-    const exprt &ssa_addition=true_exprt());
+    const exprt &ssa_addition=true_exprt(),
+    bool recursive=false);
 
   void get_result(exprt &result, const domaint::var_sett &vars);
 

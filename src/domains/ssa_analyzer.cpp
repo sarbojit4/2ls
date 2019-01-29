@@ -64,7 +64,8 @@ void ssa_analyzert::operator()(
   local_SSAt &SSA,
   const exprt &precondition,
   template_generator_baset &template_generator,
-  const exprt &ssa_addition)
+  const exprt &ssa_addition,
+  bool recursive)
 {
   if(SSA.goto_function.body.instructions.empty())
     return;
@@ -149,6 +150,11 @@ void ssa_analyzert::operator()(
       result=new heap_tpolyhedra_domaint::heap_tpolyhedra_valuet();
     }
   }
+  if(template_generator.options.get_bool_option("has-recursion"))
+  {
+    result=new tpolyhedra_domaint::templ_valuet();
+    strategy_solver=new BINSEARCH_SOLVER;
+  }
   else
   {
     if(template_generator.options.get_bool_option("enum-solver"))
@@ -176,6 +182,16 @@ void ssa_analyzert::operator()(
 
   // initialize inv
   domain->initialize(*result);
+
+  // initialize input arguments and input global variables with calling context
+  if(recursive &&
+    template_generator.options.get_bool_option("context-sensitive"))
+  {
+    while(static_cast<strategy_solver_binsearcht *>
+            (strategy_solver)->iterate_for_ins(*result)) {}
+    status()<<"------------------------------------------------------------------\n"///////////////////////////
+     "-------------------------------------------------------------------\n"<<eom;///////////////////////////
+  }
 
   // iterate
   while(strategy_solver->iterate(*result)) {}

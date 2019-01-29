@@ -24,20 +24,23 @@ void template_gen_rec_summaryt::operator()(const irep_idt &function_name,
 {
   domain_number=_domain_number;
   handle_special_functions(SSA); // we have to call that to prevent trouble!
+  exprt::operandst pre_guards;
 
   collect_variables_loop(SSA, forward);
-  merge_vars(function_name, SSA, merge_expr);
   
   // do not compute summary for entry-point
   if(SSA.goto_function.body.instructions.front().function!=ID__start ||
    options.get_bool_option("preconditions"))
   {
-    collect_inout_vars(SSA, forward);
+    if(options.get_bool_option("context-sensitive"))
+      collect_inout_vars(function_name, SSA, pre_guards, forward);
+    else
+      collect_variables_inout(SSA,forward);
   }
   
   if(options.get_bool_option("context-sensitive"))
   {
-    instantiate_template_for_rec(SSA);
+    instantiate_domains_for_rec(SSA, pre_guards);
   }
   // either use standard templates or user-supplied ones
   else if(!instantiate_custom_templates(SSA))
@@ -57,4 +60,23 @@ void template_gen_rec_summaryt::operator()(const irep_idt &function_name,
   }
   debug() << eom;
 #endif
+}
+
+void template_gen_rec_summaryt::create_rb_vars(const local_SSAt &SSA,
+  symbol_exprt &guard_ins, 
+  var_listt &rb_vars,
+  exprt::operandst &expr_vec)//put expressions like a=guard#ins? a#rb : a#init
+{
+  guard_ins=symbol_exprt("guard#ins",bool_typet());
+  for(const exprt& var:SSA.params)
+  {
+    std::string var_name=
+       id2string(to_symbol_expr(var).get_identifier());
+    irep_idt name(var_name+"#rb"),name1(var_name+"#init");
+    symbol_exprt var_rb(name,var.type()),var_init(name1,var.type());
+    rb_vars.push_back(var_rb);
+    ctx_renaming_map[var]=var_init;
+    exprt rhs=if_exprt(guard_ins,var_rb,var_init);
+    expr_vec.push_back(equal_exprt(var,rhs));
+  }
 }

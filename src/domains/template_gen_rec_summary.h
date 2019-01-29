@@ -32,18 +32,39 @@ public:
     exprt &merge_exprt,
     bool forward=true);
     
-  void merge_vars(const irep_idt &function_name,
+  void create_comb_vars(const irep_idt &function_name,
     const local_SSAt &SSA,
-    exprt& merge_expr);
-  void collect_inout_vars(const local_SSAt &SSA, bool forward);
-  //void instantiate_template_for_rec(local_SSAt SSA);
-  replace_mapt cntx_vars_map;//define new map for context variables
+    var_listt &comb_vars,
+    exprt::operandst &expr_vec,//put expressions like a#comb=(g0 && dummy0)? a0 : (g1 && dummy1)? a1 : ..... a#nondet
+    exprt &comb_guard,//comb_guard is like (g0 && dummy0) || .... (gK && dummyK)
+    exprt::operandst &pre_guards);
+    void create_rb_vars(const local_SSAt &SSA,
+    symbol_exprt &guard_ins, 
+    var_listt &rb_vars,
+    exprt::operandst &expr_vec);//put expressions like a=guard#ins? a#rb : a#init
+  void collect_inout_vars(const irep_idt &function_name,
+    const local_SSAt &SSA,
+    exprt::operandst &pre_guards,
+    bool forward);
+  void instantiate_domains_for_rec(const local_SSAt &SSA,
+    const exprt::operandst &pre_guards);
+  
+  replace_mapt ctx_renaming_map;//used to rename calling context
   domaint::var_specst var_specs_no_out;//Exclude (OUT) variables
-  private:
-    exprt merge_guard;//guard for comb variables
-    exprt guard_ins;//free guard to merge context
-    std::vector<symbol_exprt> in_vars_vec,out_vars_vec;//comb vars
-    std::vector<symbol_exprt> rb_vars;
+  std::vector<replace_mapt> pre_renaming_maps;
+  
+  inline symbol_exprt get_dummy_guard(unsigned loc)
+  {
+    return symbol_exprt(dstring("dummy#"+std::to_string(loc)),bool_typet());
+  }
+  inline void get_comb_and_nondet_symb(const symbol_exprt &var,
+    var_listt &comb_vars,
+    exprt::operandst &comb_exprs)
+  {
+    std::string var_name=id2string(var.get_identifier());
+    comb_vars.push_back(symbol_exprt(dstring(var_name+"#comb"),var.type()));
+    comb_exprs.push_back(symbol_exprt(dstring(var_name+"#nondet"),var.type()));  
+  }
 };
 
 #endif /* TEMPLATE_GEN_REC_SUMMARY_H */

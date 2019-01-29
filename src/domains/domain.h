@@ -39,7 +39,7 @@ public:
   typedef std::vector<vart> var_listt;
   typedef std::set<vart> var_sett;
 
-  typedef enum {LOOP, IN, OUT, OUTL, OUTHEAP} kindt;
+  typedef enum {LOOP, IN, OUT, OUTL, OUTHEAP, ININD, OUTIND} kindt;
 
   typedef exprt guardt;
 
@@ -115,11 +115,22 @@ public:
     std::ostream &out,
     const var_specst &var_specs,
     const namespacet &ns);
+  
+  void set_pre_renaming_map(const std::vector<replace_mapt> maps)
+  {
+    pre_renaming_map=maps;
+  }
+  void set_pre_guards(const exprt::operandst guards)
+  {
+    pre_guards=guards;
+  }
 
 protected:
   unsigned domain_number; // serves as id for variables names
   replace_mapt &renaming_map;
   const namespacet &ns;
+  std::vector<replace_mapt> pre_renaming_map;//sarbojit
+  exprt::operandst pre_guards;//sarbojit
 
   inline void rename(exprt &expr)
   {
@@ -130,6 +141,20 @@ protected:
   {
     for(unsigned i=0; i<operands.size(); ++i)
       replace_expr(renaming_map, operands[i]);
+  }
+  
+  void rename_to_pre(exprt &expr,const exprt &guard)
+  {
+    exprt::operandst expr_vec,pre_guards=guard.operands();
+    assert(pre_guards.size()==pre_renaming_map.size());
+    exprt::operandst::iterator g_it=pre_guards.begin();
+    for(replace_mapt &var_map:pre_renaming_map){
+      exprt constraint=expr.op1();
+      replace_expr(var_map,constraint);
+      expr_vec.push_back(implies_exprt(*g_it,constraint));
+      g_it++;
+    }
+    expr=conjunction(expr_vec);
   }
 };
 

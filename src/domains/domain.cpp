@@ -22,6 +22,9 @@ Function: domaint::merge_kinds
 
 domaint::kindt domaint::merge_kinds(kindt k1, kindt k2)
 {
+  if(k1==OUTIND || k2==OUTIND) return OUTIND;//sarbojit
+  else if(k1==ININD || k2==ININD) return ININD;//sarbojit
+  
   return
     (k1==OUT || k2==OUT ?  (k1==LOOP || k2==LOOP ?  OUTL : OUT) :
       (k1==LOOP || k2==LOOP ? LOOP :  IN));
@@ -52,11 +55,11 @@ void domaint::output_var_specs(
       out << "(LOOP) [ " << from_expr(ns, "", v.pre_guard) << " | ";
       out << from_expr(ns, "", v.post_guard) << " ]: ";
       break;
-    case IN:
+      case IN: case ININD:
       out << "(IN)   ";
       out << from_expr(ns, "", v.pre_guard) << ": ";
       break;
-    case OUT: case OUTL:
+    case OUT: case OUTL: case OUTIND:
       out << "(OUT)  ";
       out << from_expr(ns, "", v.post_guard) << ": ";
       break;

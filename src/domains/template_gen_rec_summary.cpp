@@ -152,3 +152,62 @@ void template_gen_rec_summaryt::create_comb_vars(const irep_idt &function_name,
   }
   comb_guard=disjunction(guards_vec);
 }
+
+void template_gen_rec_summaryt::collect_inout_vars(const irep_idt &function_name,
+  const local_SSAt &SSA,
+  exprt::operandst &pre_guards,
+  bool forward)
+{
+  exprt::operandst expr_vec;
+  symbol_exprt guard_ins;
+  var_listt rb_vars,comb_vars;
+  create_rb_vars(SSA, guard_ins, rb_vars, expr_vec);
+  exprt comb_guard;//guard for comb variables
+  
+  create_comb_vars(function_name,
+    SSA,
+    comb_vars,
+    expr_vec,
+    comb_guard,
+    pre_guards);
+  
+  // add params and globals_in in var_specs_no_out
+  exprt first_guard=
+    SSA.guard_symbol(SSA.goto_function.body.instructions.begin());
+  add_vars(
+    rb_vars,
+    and_exprt(first_guard,guard_ins),
+    comb_guard,
+    forward ? domaint::ININD : domaint::OUTIND,
+    var_specs_no_out);
+  var_listt::const_iterator v_it=comb_vars.begin();
+  for(domaint::var_spect var_spec:var_specs_no_out)
+  {
+    post_renaming_map[var_spec.var]=*v_it;
+    v_it++;
+  }
+  
+  // add params in var_specs
+  add_vars(
+    SSA.params,
+    conjunction(pre_guards),
+    first_guard,
+    forward ? domaint::ININD : domaint::OUTIND,
+    var_specs);
+  // add globals_in in var_specs
+  add_vars(
+    SSA.globals_in,
+    conjunction(pre_guards),
+    first_guard,
+    forward ? domaint::ININD : domaint::OUTIND,
+    var_specs);
+  // add globals_out(includes return values) in var_specs
+  exprt last_guard=
+    SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
+  add_vars(
+    SSA.globals_out,
+    conjunction(pre_guards),
+    last_guard,
+    forward ? domaint::OUTIND : domaint::ININD,
+    var_specs); 
+}

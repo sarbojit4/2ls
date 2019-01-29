@@ -211,3 +211,30 @@ void template_gen_rec_summaryt::collect_inout_vars(const irep_idt &function_name
     forward ? domaint::OUTIND : domaint::ININD,
     var_specs); 
 }
+
+void template_gen_rec_summaryt::instantiate_domains_for_rec(
+  const local_SSAt &SSA,
+  const exprt::operandst &pre_guards)
+{
+  replace_mapt &renaming_map=
+    std_invariants ? aux_renaming_map : post_renaming_map;
+  domain_ptr=
+      new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
+  filter_template_domain();
+  domain_ptr->set_pre_renaming_map(pre_renaming_maps);
+
+  //IN templates(Octagon)  
+  static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_interval_template(var_specs_no_out, SSA.ns, false);
+  static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_sum_template(var_specs_no_out, SSA.ns, false);
+  static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_difference_template(var_specs_no_out, SSA.ns, false);
+  //OUT, LOOP templates(Diamond)
+  static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_sum_template(var_specs, SSA.ns);
+  static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_difference_template(var_specs, SSA.ns);
+  /*static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_interval_template(var_specs, SSA.ns);*/
+}

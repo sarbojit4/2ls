@@ -17,7 +17,7 @@
 #include <solver/summarizer_bw_term.h>
 #include <solver/summarizer_rec_fw.h>
 
-#include "summary_checker_rect.h"
+#include "summary_checker_rec.h"
 
 property_checkert::resultt summary_checker_rect::operator()(
   const goto_modelt &goto_model)

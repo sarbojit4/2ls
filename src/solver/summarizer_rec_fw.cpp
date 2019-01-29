@@ -123,7 +123,7 @@ void summarizer_rec_fwt::do_summary(
     
     exprt precond(summary.fw_precondition);
     if(context_sensitive)
-      replace_expr(template_generator.init_vars_map,precond);
+      replace_expr(template_generator.ctx_renaming_map,precond);
     
     exprt::operandst conds;
     conds.reserve(5);

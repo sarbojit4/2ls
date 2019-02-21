@@ -22,6 +22,8 @@ class ssa_analyzert:public messaget
 public:
   typedef strategy_solver_baset::constraintst constraintst;
   typedef strategy_solver_baset::var_listt var_listt;
+  irep_idt function_name;
+  incremental_solvert::constraintst conds_after_call;
 
   ssa_analyzert():
     result(NULL),
@@ -51,6 +53,12 @@ public:
 
   inline unsigned get_number_of_solver_instances() { return solver_instances; }
   inline unsigned get_number_of_solver_calls() { return solver_calls; }
+  
+  exprt ssa_to_expr(const local_SSAt &SSA);
+  inline bool is_cond(exprt e)
+  {
+    return from_expr(e.op0()).compare(0,5,"$cond")? 0:1;
+  }
 
 protected:
   domaint *domain; // template generator is responsable for the domain object

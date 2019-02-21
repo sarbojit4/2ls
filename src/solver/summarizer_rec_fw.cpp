@@ -131,6 +131,7 @@ void summarizer_rec_fwt::do_summary(
     conds.push_back(precond);
     conds.push_back(ssa_inliner.get_summaries(SSA));
     cond=conjunction(conds);
+    analyzer.function_name=function_name;
     
     analyzer(solver, SSA, cond, template_generator, ssa_addition, true);
     analyzer.get_result(summary.fw_transformer, template_generator.inout_vars());

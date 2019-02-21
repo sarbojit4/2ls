@@ -234,11 +234,13 @@ void template_gen_rec_summaryt::instantiate_domains_for_rec(
       ->add_sum_template(var_specs_no_out, SSA.ns, false);
   static_cast<tpolyhedra_domaint *>(domain_ptr)
       ->add_difference_template(var_specs_no_out, SSA.ns, false);
-  //OUT, LOOP templates(Diamond)
+  //OUT, LOOP templates
   static_cast<tpolyhedra_domaint *>(domain_ptr)
       ->add_sum_template(var_specs, SSA.ns);
   static_cast<tpolyhedra_domaint *>(domain_ptr)
       ->add_difference_template(var_specs, SSA.ns);
+  static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_3_rel_template(var_specs, SSA.ns);
   /*static_cast<tpolyhedra_domaint *>(domain_ptr)
       ->add_interval_template(var_specs, SSA.ns);*/
 }

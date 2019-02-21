@@ -1196,6 +1196,44 @@ void tpolyhedra_domaint::add_sum_template(
   }
 }
 
+void tpolyhedra_domaint::add_3_rel_template(
+    const var_specst &var_specs,
+    const namespacet &ns)
+{
+  unsigned size=var_specs.size()*(var_specs.size()-1);
+  templ.reserve(templ.size()+size);
+  for(var_specst::const_iterator v1=var_specs.begin();
+      v1!=var_specs.end(); ++v1)
+  {
+    if(v1->kind!=ININD && v1->kind!=IN) continue;
+    var_specst::const_iterator v2=v1; ++v2;
+    for(; v2!=var_specs.end(); ++v2)
+    {
+      if(v2->kind!=ININD && v2->kind!=IN) continue;
+      var_specst::const_iterator v3=v2; ++v3;
+      for(; v3!=var_specs.end(); ++v3)
+      {
+        if(v3->kind!=OUTIND && v2->kind!=OUT) continue;
+        exprt pre_g, post_g, aux_expr;
+        merge_and(pre_g, v1->pre_guard, v2->pre_guard, ns);
+        merge_and(post_g, v1->post_guard, v2->post_guard, ns);
+        merge_and(aux_expr, v1->aux_expr, v2->aux_expr, ns);
+        merge_and(pre_g, pre_g, v3->pre_guard, ns);
+        merge_and(post_g, post_g, v3->post_guard, ns);
+        merge_and(aux_expr, aux_expr, v3->aux_expr, ns);
+        
+        // x1+x2-x3
+        exprt e1=minus_exprt(plus_exprt(v1->var, v2->var), v3->var);
+        add_template_row(e1, pre_g, post_g, aux_expr, v3->kind);
+
+        // x3-x1-x2
+        exprt e2=minus_exprt(v3->var, plus_exprt(v1->var, v2->var));
+        add_template_row(e2, pre_g, post_g, aux_expr, v3->kind);
+      }
+    }
+  }
+}
+
 void tpolyhedra_domaint::restrict_to_sympath(const symbolic_patht &sympath)
 {
   for(auto &row : templ)

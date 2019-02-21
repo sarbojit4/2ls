@@ -142,6 +142,9 @@ public:
   void add_quadratic_template(
     const var_specst &var_specs,
     const namespacet &ns);
+  void add_3_rel_template(
+    const var_specst &var_specs,
+    const namespacet &ns);
 
   void restrict_to_sympath(const symbolic_patht &sympath);
   void undo_restriction();

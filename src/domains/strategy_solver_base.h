@@ -31,8 +31,8 @@ class strategy_solver_baset:public messaget
   {}
 
   virtual bool iterate(invariantt &inv) { assert(false); }
-  bool iterate_for_ins(invariantt &_inv, 
-    exprt::operandst &conds) { assert(false); }
+  virtual bool iterate_for_ins(invariantt &_inv, 
+    const incremental_solvert::constraintst &conds) { assert(false); }
 
   inline unsigned get_number_of_solver_calls() { return solver_calls; }
   inline unsigned get_number_of_solver_instances() { return solver_instances; }

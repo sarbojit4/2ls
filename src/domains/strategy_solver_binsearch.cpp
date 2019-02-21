@@ -252,7 +252,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 }
 
 bool strategy_solver_binsearcht::iterate_for_ins(invariantt &_inv, 
-  const exprt::operandst &conds)
+  const incremental_solvert::constraintst &conds)
 {
   tpolyhedra_domaint::templ_valuet &inv=
     static_cast<tpolyhedra_domaint::templ_valuet &>(_inv);
@@ -263,7 +263,7 @@ bool strategy_solver_binsearcht::iterate_for_ins(invariantt &_inv,
   
   for(const exprt& cond:conds)//sarbojit
   {
-    solver << equal_exprt(cond,false_exprt());
+    solver << make_false_cond(cond);
   }//sarbojit
 
   exprt inv_expr=tpolyhedra_domain.to_pre_constraints(inv,true);
@@ -363,7 +363,7 @@ bool strategy_solver_binsearcht::iterate_for_ins(invariantt &_inv,
     
     for(const exprt& cond:conds)//sarbojit
     {
-      solver << equal_exprt(cond,false_exprt());
+      solver << make_false_cond(cond);
     }//sarbojit
 
     exprt pre_inv_expr=

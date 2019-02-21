@@ -107,12 +107,17 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     }
 #endif
 
-
+    bool improved_from_neginf=false;
     std::size_t row=0;
     for(; row<strategy_cond_literals.size(); row++)
     {
       if(solver.l_get(strategy_cond_literals[row]).is_true())
+      {
+        if(tpolyhedra_domain.is_row_value_neginf(
+             tpolyhedra_domain.get_row_value(row, inv)))
+          improved_from_neginf=true;
         break;  // we've found a row to improve
+      }
     }
 
     debug() << "improving row: " << row << eom;
@@ -125,6 +130,12 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       simplify_const(solver.get(strategy_value_exprs[row]));
 
     solver.pop_context();  // improvement check
+    
+    if(improved_from_neginf)
+    {
+      tpolyhedra_domain.set_row_value(row, lower, inv);
+      return true;
+    }
 
     solver.new_context(); // symbolic value system
 

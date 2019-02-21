@@ -236,6 +236,7 @@ void summary_checker_baset::check_properties(
       solver << summary_db.get(f_it->first).aux_precondition;
     }
   }
+  else solver << false_exprt(); //sarbojit: fix empty summary bug
 
   // callee summaries
   solver << ssa_inliner.get_summaries(SSA);

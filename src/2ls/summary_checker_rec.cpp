@@ -77,6 +77,9 @@ property_checkert::resultt summary_checker_rect::operator()(
       return property_checkert::UNKNOWN;
 #endif
 
+    result=check_properties();
+    report_statistics();
+
   if(result==property_checkert::UNKNOWN &&
        options.get_bool_option("heap-values-refine") &&
        options.get_bool_option("heap-interval"))

@@ -662,7 +662,8 @@ void tpolyhedra_domaint::project_on_vars(
     bool pure=true;
     for(const auto &symbol : symbols)
     {
-      if(!vars.empty() && vars.find(symbol)==vars.end())
+      //if(!vars.empty() && vars.find(symbol)==vars.end())
+      if(vars.find(symbol)==vars.end())//sarbojit: change after experiment
       {
         pure=false;
         break;

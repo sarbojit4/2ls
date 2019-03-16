@@ -26,16 +26,16 @@ public:
 
   virtual bool iterate(invariantt &inv);
   virtual bool iterate_for_ins(invariantt &_inv, 
-    const incremental_solvert::constraintst &conds);
+    const var_listt &masking_guards);
   
-  inline exprt make_false_cond(
+  /*inline exprt make_false_cond(
     const exprt &cond)
   {
     if(cond.id()==ID_implies)
       return implies_exprt(cond.op0(), 
                            equal_exprt(cond.op1().op0(), false_exprt()));
     else return equal_exprt(cond.op0(), false_exprt());
-  }
+  }*/
 
 protected:
   tpolyhedra_domaint &tpolyhedra_domain;

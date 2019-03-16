@@ -44,10 +44,8 @@ public:
     exprt::operandst &expr_vec);//put expressions like a=guard#ins? a#rb : a#init
   exprt collect_inout_vars(const irep_idt &function_name,
     const local_SSAt &SSA,
-    exprt::operandst &pre_guards,
     bool forward);
-  void instantiate_domains_for_rec(const local_SSAt &SSA,
-    const exprt::operandst &pre_guards);
+  void instantiate_domains_for_rec(const local_SSAt &SSA);
   
   replace_mapt ctx_renaming_map;//used to rename calling context
   domaint::var_specst var_specs_no_out;//Exclude (OUT) variables
@@ -67,9 +65,7 @@ public:
   }
   void create_dep_map(const local_SSAt &SSA, const local_SSAt::nodet &node);
   bool get_dependency_for_rhs(exprt expr, local_SSAt::locationt loc);
-  bool get_args_dep(
-    const irep_idt &function_name, 
-    const local_SSAt::nodet node,
+  bool get_args_dep(const local_SSAt::nodet node,
     const function_application_exprt f_call);
   
   inline symbol_exprt get_dummy_guard(unsigned loc)

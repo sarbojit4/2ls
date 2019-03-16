@@ -24,7 +24,6 @@ void template_gen_rec_summaryt::operator()(const irep_idt &function_name,
 {
   domain_number=_domain_number;
   handle_special_functions(SSA); // we have to call that to prevent trouble!
-  exprt::operandst pre_guards;
 
   collect_variables_loop(SSA, forward);
   
@@ -33,7 +32,7 @@ void template_gen_rec_summaryt::operator()(const irep_idt &function_name,
    options.get_bool_option("preconditions"))
   {
     if(options.get_bool_option("context-sensitive"))
-      ssa_addition=collect_inout_vars(function_name, SSA, pre_guards, forward);
+      ssa_addition=collect_inout_vars(function_name, SSA, forward);
     else
     {
       ssa_addition=true_exprt();
@@ -43,7 +42,7 @@ void template_gen_rec_summaryt::operator()(const irep_idt &function_name,
   
   if(options.get_bool_option("context-sensitive"))
   {
-    instantiate_domains_for_rec(SSA, pre_guards);
+    instantiate_domains_for_rec(SSA);
   }
   // either use standard templates or user-supplied ones
   else if(!instantiate_custom_templates(SSA))
@@ -112,7 +111,7 @@ void template_gen_rec_summaryt::create_comb_vars(const irep_idt &function_name,
         if(options.get_bool_option("context-sensitive"))
         {
           symbol_exprt dummy_guard=get_dummy_guard(node.location->location_number);
-          if(get_args_dep(function_name, node, f_call)) 
+          if(get_args_dep(node, f_call)) 
             masking_guards.push_back(dummy_guard);
           exprt cond=and_exprt(guard,dummy_guard);
           guards_vec.push_back(cond);
@@ -161,7 +160,6 @@ void template_gen_rec_summaryt::create_comb_vars(const irep_idt &function_name,
 
 exprt template_gen_rec_summaryt::collect_inout_vars(const irep_idt &function_name,
   const local_SSAt &SSA,
-  exprt::operandst &pre_guards,
   bool forward)
 {
   exprt::operandst expr_vec;
@@ -169,6 +167,7 @@ exprt template_gen_rec_summaryt::collect_inout_vars(const irep_idt &function_nam
   var_listt rb_vars,comb_vars;
   create_rb_vars(SSA, guard_ins, rb_vars, expr_vec);
   exprt comb_guard;//guard for comb variables
+  exprt::operandst pre_guards;
   
   create_comb_vars(function_name,
     SSA,
@@ -219,9 +218,7 @@ exprt template_gen_rec_summaryt::collect_inout_vars(const irep_idt &function_nam
   return conjunction(expr_vec);
 }
 
-void template_gen_rec_summaryt::instantiate_domains_for_rec(
-  const local_SSAt &SSA,
-  const exprt::operandst &pre_guards)
+void template_gen_rec_summaryt::instantiate_domains_for_rec(const local_SSAt &SSA)
 {
   replace_mapt &renaming_map=
     std_invariants ? aux_renaming_map : post_renaming_map;
@@ -324,4 +321,27 @@ void template_gen_rec_summaryt::create_dep_map(
       }
     }
   }
+}
+
+bool template_gen_rec_summaryt::get_args_dep( 
+  const local_SSAt::nodet node,
+  const function_application_exprt f_call)
+{
+  bool dep_on_rec_call=false;
+  local_SSAt::nodet::equalitiest::const_iterator 
+    e_it=node.equalities.begin();
+  for(exprt arg:f_call.arguments())
+  {
+    for(;e_it!=node.equalities.end();e_it++)
+    {
+      if(e_it->rhs()==arg)
+      {
+        dep_on_rec_call=
+          get_dependency_for_rhs(e_it->lhs(), node.location);
+        break;
+      }
+    }
+    if(dep_on_rec_call) return true;
+  }
+  return false;
 }

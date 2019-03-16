@@ -70,7 +70,7 @@ void ssa_analyzert::operator()(
   if(SSA.goto_function.body.instructions.empty())
     return;
 
-  solver << ssa_to_expr(SSA);
+  solver << SSA;
   SSA.mark_nodes();
 
   solver.new_context();
@@ -187,12 +187,10 @@ void ssa_analyzert::operator()(
   if(recursive &&
     template_generator.options.get_bool_option("context-sensitive"))
   {
-    while(strategy_solver->iterate_for_ins(*result, conds_after_call)) {}
+    while(strategy_solver->iterate_for_ins(*result, masking_guards)) {}
     status()<<"------------------------------------------------------------------\n"///////////////////////////
      "-------------------------------------------------------------------\n"<<eom;///////////////////////////
   }
-  
-  solver<<conds_after_call;
 
   // iterate
   while(strategy_solver->iterate(*result)) {}
@@ -258,53 +256,3 @@ const exprt ssa_analyzert::input_heap_bindings()
 {
   return static_cast<heap_domaint &>(*domain).get_iterator_bindings();
 }
-
-exprt ssa_analyzert::ssa_to_expr(const local_SSAt &SSA)
-{
-  std::vector<exprt> expr_vec;
-  for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
-      n_it!=SSA.nodes.end(); n_it++)
-  {
-    if(n_it->marked)
-      continue;
-    
-    bool rec_call=false;
-    for(function_application_exprt f_call:n_it->function_calls)
-      if(function_name==to_symbol_expr(f_call.function()).get_identifier() &&
-         f_call.function().id()==ID_symbol)//No function pointer
-        rec_call=true;
-    
-    for(local_SSAt::nodet::equalitiest::const_iterator
-          e_it=n_it->equalities.begin();
-        e_it!=n_it->equalities.end();
-        e_it++)
-    {
-      if(rec_call && is_cond(*e_it))
-      {
-        if(!n_it->enabling_expr.is_true())
-          conds_after_call.push_back(implies_exprt(n_it->enabling_expr, *e_it));
-        else
-          conds_after_call.push_back(*e_it);
-      }
-      else
-      {
-        if(!n_it->enabling_expr.is_true())
-          expr_vec.push_back(implies_exprt(n_it->enabling_expr, *e_it));
-        else
-          expr_vec.push_back(*e_it);
-      }
-    }
-    for(local_SSAt::nodet::constraintst::const_iterator
-          c_it=n_it->constraints.begin();
-        c_it!=n_it->constraints.end();
-        c_it++)
-    {
-      if(!n_it->enabling_expr.is_true())
-        expr_vec.push_back(implies_exprt(n_it->enabling_expr, *c_it));
-      else
-        expr_vec.push_back(*c_it);
-    }
-  }
-  return conjunction(expr_vec);
-}
-

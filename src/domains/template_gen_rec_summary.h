@@ -52,6 +52,25 @@ public:
   replace_mapt ctx_renaming_map;//used to rename calling context
   domaint::var_specst var_specs_no_out;//Exclude (OUT) variables
   std::vector<replace_mapt> pre_renaming_maps;
+  typedef std::map<irep_idt, bool> rec_dep_mapt;
+  typedef std::map<local_SSAt::locationt, rec_dep_mapt> dep_mapst;
+  dep_mapst dep_maps;//for each variable, stores if it depends on some previous recursive call
+  var_listt masking_guards;//used to discard some argument values if it depends on some earlier recursive call
+  
+  inline bool is_cond(const exprt &e)
+  {
+    return from_expr(e).find("$cond")!=std::string::npos;
+  }
+  inline bool is_guard(const exprt &e)
+  {
+    return from_expr(e).find("$guard")!=std::string::npos;
+  }
+  void create_dep_map(const local_SSAt &SSA, const local_SSAt::nodet &node);
+  bool get_dependency_for_rhs(exprt expr, local_SSAt::locationt loc);
+  bool get_args_dep(
+    const irep_idt &function_name, 
+    const local_SSAt::nodet node,
+    const function_application_exprt f_call);
   
   inline symbol_exprt get_dummy_guard(unsigned loc)
   {

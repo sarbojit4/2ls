@@ -100,6 +100,7 @@ void template_gen_rec_summaryt::create_comb_vars(const irep_idt &function_name,
   
   for(const local_SSAt::nodet &node:SSA.nodes)
   {
+    create_dep_map(SSA, node);
     for(const function_application_exprt &f_call:node.function_calls)
     {
       if(function_name==to_symbol_expr(f_call.function()).get_identifier()&&
@@ -111,6 +112,8 @@ void template_gen_rec_summaryt::create_comb_vars(const irep_idt &function_name,
         if(options.get_bool_option("context-sensitive"))
         {
           symbol_exprt dummy_guard=get_dummy_guard(node.location->location_number);
+          if(get_args_dep(function_name, node, f_call)) 
+            masking_guards.push_back(dummy_guard);
           exprt cond=and_exprt(guard,dummy_guard);
           guards_vec.push_back(cond);
           std::vector<exprt>::iterator c_it=comb_exprs.begin();
@@ -243,4 +246,82 @@ void template_gen_rec_summaryt::instantiate_domains_for_rec(
       ->add_3_rel_template(var_specs, SSA.ns);
   /*static_cast<tpolyhedra_domaint *>(domain_ptr)
       ->add_interval_template(var_specs, SSA.ns);*/
+}
+
+bool template_gen_rec_summaryt::get_dependency_for_rhs(
+  exprt expr,
+  local_SSAt::locationt loc)
+{
+  if(expr.id()==ID_symbol &&
+     !(expr.is_constant()) && 
+     !is_cond(expr) && 
+     !is_guard(expr))
+  {
+    if(id2string(to_symbol_expr(expr).get_identifier()).
+       find("#return_value#")!=std::string::npos)
+    {
+      return true;
+    }
+    irep_idt original_name=get_original_name(to_symbol_expr(expr));
+    auto dep_ent=dep_maps.at(loc).find(original_name);
+    assert(dep_ent!=dep_maps.at(loc).end());
+    return dep_ent->second;
+  }
+  else
+  {
+    forall_operands(it, expr)
+      if(get_dependency_for_rhs(*it, loc)) return true;
+    return false;
+  }
+}
+
+void template_gen_rec_summaryt::create_dep_map(
+  const local_SSAt &SSA,
+  const local_SSAt::nodet &cur_node)
+{
+  if(!options.get_bool_option("context-sensitive")) return;
+  ssa_domaint::def_mapt cur_def_map=SSA.ssa_analysis[cur_node.location].def_map;
+  rec_dep_mapt &cur_dep_map=dep_maps[cur_node.location];
+  for(auto& def_ent:cur_def_map)
+  {
+    local_SSAt::locationt last_modified_loc=def_ent.second.source;
+    if(id2string(def_ent.first).find("#return_value")!=std::string::npos)
+      cur_dep_map.insert(std::make_pair(def_ent.first,true));//if it is return value
+    else if(cur_node.location->location_number!=
+       SSA.nodes.front().location->location_number &&//if current location is not 0
+       last_modified_loc->location_number!=
+       SSA.nodes.front().location->location_number &&
+       last_modified_loc!=cur_node.location)//if last modified location is not 0
+    {
+      rec_dep_mapt prev_dep_map=dep_maps[last_modified_loc];
+      rec_dep_mapt::iterator prev_dep_ent=prev_dep_map.find(def_ent.first);
+      assert(prev_dep_ent!=prev_dep_map.end());
+      cur_dep_map.insert(std::make_pair(
+        def_ent.first, prev_dep_ent->second));//depends on previous
+    }
+    else
+      cur_dep_map.insert(std::make_pair(def_ent.first,false));//no dependency
+  }
+  if(cur_node.location->location_number==
+       SSA.nodes.front().location->location_number) return;
+  for(equal_exprt eq:cur_node.equalities)
+  {
+    if(eq.rhs().id()==ID_symbol &&
+       id2string(to_symbol_expr(eq.rhs()).get_identifier()).find("#arg")!=
+       std::string::npos)
+    {
+      continue;
+    }
+    if(eq.lhs().id()==ID_symbol && 
+       cur_dep_map.find(get_original_name(to_symbol_expr(eq.lhs())))!=cur_dep_map.end())
+    {
+      irep_idt lhs_name=
+         get_original_name(to_symbol_expr(eq.lhs()));
+      if(cur_def_map.find(lhs_name)!=cur_def_map.end())
+      {
+        cur_dep_map[lhs_name]=
+          get_dependency_for_rhs(eq.rhs(),cur_node.location);//for all operands in rhs check dependency
+      }
+    }
+  }
 }

@@ -36,7 +36,7 @@ class summaryt
     aux_precondition(nil_exprt()),
     termination_argument(nil_exprt()),
     terminates(UNKNOWN),
-    mark_recompute(false) {}
+    mark_recompute(false) {overapprox=false;}
 
   var_listt params;
   var_sett globals_in, globals_out;
@@ -63,6 +63,8 @@ class summaryt
   void join(const summaryt &new_summary);
 
   void set_value_domains(const local_SSAt &SSA);
+  
+  bool overapprox;
 
  protected:
   void combine_or(exprt &olde, const exprt &newe);

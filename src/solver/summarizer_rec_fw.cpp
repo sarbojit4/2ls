@@ -60,6 +60,7 @@ void summarizer_rec_fwt::compute_summary_rec(
 
   // create summary
   summaryt summary;
+  summary.overapprox=(recursive||overapprox);
   summary.params=SSA.params;
   summary.globals_in=SSA.globals_in;
   summary.globals_out=SSA.globals_out;

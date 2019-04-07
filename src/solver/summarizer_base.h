@@ -37,6 +37,7 @@ public:
     summaries_used(0),
     termargs_computed(0)
   {
+    overapprox=false;
   }
 
   typedef summaryt::predicatet preconditiont;
@@ -60,6 +61,7 @@ public:
   ssa_dbt &ssa_db;
   ssa_unwindert &ssa_unwinder;
   ssa_inlinert &ssa_inliner;
+  bool overapprox;
 
   virtual void compute_summary_rec(
     const function_namet &function_name,

@@ -232,6 +232,7 @@ void summarizer_fwt::inline_summaries(
         irep_idt fname=to_symbol_expr(f_it->function()).get_identifier();
         status() << "Recursively summarizing function " << fname << eom;
         compute_summary_rec(fname, precondition_call, context_sensitive);
+        if(summary_db.get(fname).overapprox==true) overapprox=true;
         summaries_used++;
       }
     }

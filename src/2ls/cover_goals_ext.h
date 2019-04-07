@@ -86,6 +86,9 @@ public:
 
   typedef std::map<irep_idt, goalt> goal_mapt;
   goal_mapt goal_map;
+  
+  //input and outputs of functions with over-approximated summaries
+  std::vector<std::pair<exprt::operandst,exprt::operandst>> of_in_out;
 
   // statistics
 

@@ -331,6 +331,35 @@ void summary_checker_baset::check_properties(
     literalt p=!solver.convert(conjunction(it->second.conjuncts));
     cover_goals.add(p);
   }
+  
+  if(!cover_goals.goals.empty())
+  {
+    local_SSAt::var_sett globals_out;
+    exprt::operandst f_globals_out;
+    for(local_SSAt::nodet & node:SSA.nodes)
+    {
+      for(function_application_exprt &f_call:node.function_calls)
+      {
+        summaryt summary=summary_db.get(
+          to_symbol_expr(f_call.function()).get_identifier());
+        if(f_call.function().id()==ID_symbol && !summary.overapprox)
+          continue;
+        globals_out.clear();
+        SSA.get_globals(node.location,globals_out,false);
+        for(symbol_exprt gout:globals_out)
+        {
+          symbol_exprt g_found;
+          if(ssa_inliner.find_corresponding_symbol(gout,
+             summary.globals_out, g_found))
+          {
+            f_globals_out.push_back(gout);
+          }
+        }
+        cover_goals.of_in_out.push_back(
+         std::make_pair(f_call.arguments(),f_globals_out));
+      }
+    }
+  }
 
   status() << "Running " << solver.solver->decision_procedure_text() << eom;
 

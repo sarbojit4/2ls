@@ -188,8 +188,9 @@ void cover_goals_extt::assignment()
       }
     }
   }
-  if(!invariants_involved || !spurious_check)
+  /*if((!invariants_involved && of_in_out.empty()) || !spurious_check)
   {
+    std::cout<<"No spuriousness check------------------\n";/////////////
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
     for(goal_mapt::const_iterator it=goal_map.begin();
         it!=goal_map.end(); it++, g_it++)
@@ -208,12 +209,49 @@ void cover_goals_extt::assignment()
       }
     }
     return;
-  }
+  }*/
 
   solver.new_context();
   // force avoiding paths going through invariants
 
   solver << conjunction(loophead_selects);
+
+  if(!of_in_out.empty())
+  {
+    status()<<"Checking spuriousness:";///////////////
+    solver.new_context();
+    exprt::operandst disjuncts;
+    for(auto func_inout:of_in_out)
+    {
+      for(exprt in:func_inout.first)
+      {
+        solver<<equal_exprt(in,solver.get(in));
+      }
+      for(exprt out:func_inout.second)
+      {
+        disjuncts.push_back(not_exprt(equal_exprt(out,solver.get(out))));
+      }
+    }
+    //literalt l=solver.convert(disjunction(disjuncts));
+    solver<<disjunction(disjuncts);
+    switch(solver())
+    {
+      case decision_proceduret::D_SATISFIABLE:
+      {
+        status()<<"    Spurious"<<eom;////////////////
+        solver.pop_context();
+        solver.pop_context();
+        return;
+      }
+      case decision_proceduret::D_UNSATISFIABLE:
+        status()<<"    Not spurious"<<eom;///////////////////
+        break;
+      case decision_proceduret::D_ERROR:
+      default:
+        throw "error from decision procedure";
+    }
+    solver.pop_context();
+  }
 
   switch(solver())
   {

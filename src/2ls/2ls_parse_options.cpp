@@ -1784,7 +1784,7 @@ void twols_parse_optionst::help()
     " --termination                compute ranking functions to prove termination\n" // NOLINT(*)
     " --k-induction                use k-induction\n"
     " --incremental-bmc            use incremental-bmc\n"
-    " --has-recursion              enable recursive function support"
+    " --has-recursion              enable recursive function support\n"
     " --preconditions              compute preconditions\n"
     " --sufficient                 sufficient preconditions (default: necessary)\n" // NOLINT(*)
     " --havoc                      havoc loops and function calls\n"

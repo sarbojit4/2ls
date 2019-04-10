@@ -216,9 +216,9 @@ void cover_goals_extt::assignment()
 
   solver << conjunction(loophead_selects);
 
-  if(!of_in_out.empty())
+  if(!of_in_out.empty())//sarbojit
   {
-    status()<<"Checking spuriousness:";///////////////
+    std::cout<<"Checking spuriousness:\n\n";///////////////
     solver.new_context();
     exprt::operandst disjuncts;
     for(auto func_inout:of_in_out)
@@ -238,20 +238,20 @@ void cover_goals_extt::assignment()
     {
       case decision_proceduret::D_SATISFIABLE:
       {
-        status()<<"    Spurious"<<eom;////////////////
+        std::cout<<"    Spurious\n";////////////////
         solver.pop_context();
         solver.pop_context();
         return;
       }
       case decision_proceduret::D_UNSATISFIABLE:
-        status()<<"    Not spurious"<<eom;///////////////////
+        std::cout<<"    Not spurious\n";///////////////////
         break;
       case decision_proceduret::D_ERROR:
       default:
         throw "error from decision procedure";
     }
     solver.pop_context();
-  }
+  }//sarbojit
 
   switch(solver())
   {

@@ -259,7 +259,7 @@ void summary_checker_baset::check_properties(
     options.get_bool_option("trace") ||
     options.get_option("graphml-witness")!="" ||
     options.get_option("json-cex")!="");
-
+  
 #if 0
   debug() << "(C) " << from_expr(SSA.ns, "", enabling_expr) << eom;
 #endif
@@ -331,8 +331,7 @@ void summary_checker_baset::check_properties(
     literalt p=!solver.convert(conjunction(it->second.conjuncts));
     cover_goals.add(p);
   }
-  
-  if(!cover_goals.goals.empty())
+  if(!cover_goals.goals.empty())//sarbojit
   {
     local_SSAt::var_sett globals_out;
     exprt::operandst f_globals_out;
@@ -340,6 +339,8 @@ void summary_checker_baset::check_properties(
     {
       for(function_application_exprt &f_call:node.function_calls)
       {
+        if(!summary_db.exists(
+           to_symbol_expr(f_call.function()).get_identifier())) continue;
         summaryt summary=summary_db.get(
           to_symbol_expr(f_call.function()).get_identifier());
         if(f_call.function().id()==ID_symbol && !summary.overapprox)
@@ -359,7 +360,7 @@ void summary_checker_baset::check_properties(
          std::make_pair(f_call.arguments(),f_globals_out));
       }
     }
-  }
+  }//sarbojit
 
   status() << "Running " << solver.solver->decision_procedure_text() << eom;
 

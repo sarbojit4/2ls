@@ -216,7 +216,7 @@ void cover_goals_extt::assignment()
 
   solver << conjunction(loophead_selects);
 
-  if(!of_in_out.empty())//sarbojit
+  /*if(!of_in_out.empty())//sarbojit
   {
     std::cout<<"Checking spuriousness:\n\n";///////////////
     solver.new_context();
@@ -251,6 +251,14 @@ void cover_goals_extt::assignment()
         throw "error from decision procedure";
     }
     solver.pop_context();
+  }//sarbojit*/
+  
+  for(local_SSAt::nodet node:SSA.nodes)//sarbojit
+  {
+    for(function_application_exprt f_call:node.function_calls)
+    {
+      solver<<equal_exprt(SSA.guard_symbol(node.location), false_exprt());
+    }
   }//sarbojit
 
   switch(solver())

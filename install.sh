@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CBMC_REPO=https://github.com/peterschrammel/cbmc
+CBMC_REPO=https://github.com/sarbojit4/cbmc.git
 CBMC_VERSION=2ls-prerequisites-0.7
 
 if [ "$1" != "" ]

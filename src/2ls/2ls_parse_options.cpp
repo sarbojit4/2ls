@@ -326,6 +326,8 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
        cmdline.isset("k-induction"))
       status()<<"Ignoring option --has-recursion"<<eom;
     options.set_option("has-recursion", true);
+    //options.set_option("inline", true);
+
   }
   //.............................................
 
@@ -424,6 +426,8 @@ int twols_parse_optionst::doit()
 
   if(get_goto_program(options, goto_model))
     return 6;
+  
+  //process_goto_program(options,goto_model);/////////////////////////////sarbojit
 
   const namespacet ns(goto_model.symbol_table);
   ssa_heap_analysist heap_analysis(ns);
@@ -664,6 +668,95 @@ int twols_parse_optionst::doit()
       !options.get_bool_option("preconditions") &&
       !options.get_bool_option("termination") &&
       !options.get_bool_option("nontermination");
+    
+    if(options.get_bool_option("has-recursion"))
+    {
+      options.set_option("inline", true);
+      bool unknown=true;
+      int iter=0;
+      while(unknown)
+      {
+        iter++;
+        status()<<"\n====================Iteration "
+          <<iter<<"======================="<<eom;
+        switch((*checker)(goto_model))
+        {
+        case property_checkert::PASS:
+          if(report_assertions)
+            report_properties(options, goto_model, checker->property_map);
+          report_success();
+          if(cmdline.isset("graphml-witness"))
+            output_graphml_proof(options, goto_model, *checker);
+          retval=0;
+          unknown=false;
+          break;
+
+        case property_checkert::FAIL:
+        {
+          if(report_assertions)
+            report_properties(options, goto_model, checker->property_map);
+
+          // validate trace
+          bool trace_valid=false;
+          for(const auto &p : checker->property_map)
+          {
+            if(p.second.result!=property_checkert::FAIL)
+              continue;
+
+            if(options.get_bool_option("trace"))
+              show_counterexample(goto_model, p.second.error_trace);
+
+            trace_valid=
+              !p.second.error_trace.steps.empty() &&
+              (options.get_bool_option("nontermination") ||
+               p.second.error_trace.steps.back().is_assert());
+            break;
+          }
+
+          if(cmdline.isset("graphml-witness"))
+          {
+    #if 1
+            if(!trace_valid)
+            {
+              retval=5;
+              error() << "Internal witness validation failed" << eom;
+              report_unknown();
+              break;
+            }
+    #endif
+            output_graphml_cex(options, goto_model, *checker);
+          }
+          report_failure();
+          retval=10;
+          unknown=false;
+          break;
+        }
+        case property_checkert::UNKNOWN:
+          if(report_assertions)
+            report_properties(options, goto_model, checker->property_map);
+          retval=5;
+          report_unknown();
+          break;
+
+        default:
+          assert(false);
+        }
+        process_goto_program(options, goto_model);
+        //clean summary checker
+        checker=std::unique_ptr<summary_checker_baset>(
+          new summary_checker_rect(options, heap_analysis));
+        checker->set_message_handler(get_message_handler());
+        checker->simplify=!cmdline.isset("no-simplify");
+        checker->fixed_point=!cmdline.isset("no-fixed-point");
+      }
+      if(cmdline.isset("instrument-output"))
+      {
+        checker->instrument_and_output(goto_model);
+      }
+      return retval;
+    }
+    else
+    {
     // do actual analysis
     switch((*checker)(goto_model))
     {
@@ -732,6 +825,7 @@ int twols_parse_optionst::doit()
     }
 
     return retval;
+  }
   }
 
   catch(const std::string error_msg)

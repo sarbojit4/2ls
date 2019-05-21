@@ -97,7 +97,8 @@ protected:
 
   bool process_goto_program(
     const optionst &options,
-    goto_modelt &goto_model);
+    goto_modelt &goto_model,
+    unsigned depth=0);
 
   bool set_properties(goto_modelt &);
 

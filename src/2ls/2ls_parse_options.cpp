@@ -427,8 +427,6 @@ int twols_parse_optionst::doit()
   if(get_goto_program(options, goto_model))
     return 6;
   
-  //process_goto_program(options,goto_model);/////////////////////////////sarbojit
-
   const namespacet ns(goto_model.symbol_table);
   ssa_heap_analysist heap_analysis(ns);
   if((options.get_bool_option("heap") ||
@@ -673,7 +671,7 @@ int twols_parse_optionst::doit()
     {
       options.set_option("inline", true);
       bool unknown=true;
-      int iter=0;
+      unsigned iter=0;
       while(unknown)
       {
         iter++;
@@ -741,7 +739,9 @@ int twols_parse_optionst::doit()
         default:
           assert(false);
         }
-        process_goto_program(options, goto_model);
+        const namespacet ns(goto_model.symbol_table);
+        goto_model.goto_functions.output(ns, std::cout);
+        process_goto_program(options, goto_model, iter);
         //clean summary checker
         checker=std::unique_ptr<summary_checker_baset>(
           new summary_checker_rect(options, heap_analysis));
@@ -1253,7 +1253,8 @@ Function: twols_parse_optionst::process_goto_program
 
 bool twols_parse_optionst::process_goto_program(
   const optionst &options,
-  goto_modelt &goto_model)
+  goto_modelt &goto_model,
+  unsigned depth)
 {
   try
   {
@@ -1294,7 +1295,8 @@ bool twols_parse_optionst::process_goto_program(
       goto_inlinet goto_inline(
         goto_model.goto_functions,
         ns,
-        ui_message_handler);
+        ui_message_handler,
+        depth);
       goto_inline();
 #if IGNORE_RECURSION
       recursion_detected=goto_inline.recursion_detected();

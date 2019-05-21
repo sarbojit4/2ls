@@ -1296,6 +1296,7 @@ bool twols_parse_optionst::process_goto_program(
         goto_model.goto_functions,
         ns,
         ui_message_handler,
+        goto_model.symbol_table,
         depth);
       goto_inline();
 #if IGNORE_RECURSION

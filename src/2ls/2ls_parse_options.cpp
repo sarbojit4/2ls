@@ -677,6 +677,9 @@ int twols_parse_optionst::doit()
         iter++;
         status()<<"\n====================Iteration "
           <<iter<<"======================="<<eom;
+        const namespacet ns(goto_model.symbol_table);
+        goto_model.goto_functions.output(ns, std::cout);
+
         switch((*checker)(goto_model))
         {
         case property_checkert::PASS:
@@ -746,8 +749,8 @@ int twols_parse_optionst::doit()
         if (!unknown)
           return retval;
 
-        const namespacet ns(goto_model.symbol_table);
-        goto_model.goto_functions.output(ns, std::cout);
+        // const namespacet ns(goto_model.symbol_table);
+        // goto_model.goto_functions.output(ns, std::cout);
         process_goto_program(options, goto_model, iter);
         //clean summary checker
         checker=std::unique_ptr<summary_checker_baset>(

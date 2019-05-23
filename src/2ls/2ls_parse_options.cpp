@@ -672,7 +672,7 @@ int twols_parse_optionst::doit()
       options.set_option("inline", true);
       bool unknown=true;
       unsigned iter=0;
-      while(unknown)
+      while(true)
       {
         iter++;
         status()<<"\n====================Iteration "
@@ -739,6 +739,13 @@ int twols_parse_optionst::doit()
         default:
           assert(false);
         }
+        if(cmdline.isset("instrument-output"))
+        {
+          checker->instrument_and_output(goto_model);
+        }
+        if (!unknown)
+          return retval;
+
         const namespacet ns(goto_model.symbol_table);
         goto_model.goto_functions.output(ns, std::cout);
         process_goto_program(options, goto_model, iter);
@@ -748,10 +755,6 @@ int twols_parse_optionst::doit()
         checker->set_message_handler(get_message_handler());
         checker->simplify=!cmdline.isset("no-simplify");
         checker->fixed_point=!cmdline.isset("no-fixed-point");
-      }
-      if(cmdline.isset("instrument-output"))
-      {
-        checker->instrument_and_output(goto_model);
       }
       return retval;
     }

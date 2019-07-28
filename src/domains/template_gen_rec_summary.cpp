@@ -261,6 +261,7 @@ bool template_gen_rec_summaryt::get_dependency_for_rhs(
     }
     irep_idt original_name=get_original_name(to_symbol_expr(expr));
     auto dep_ent=dep_maps.at(loc).find(original_name);
+    //std::cout<<loc->location_number<<":"<<id2string(original_name)<<std::endl;
     assert(dep_ent!=dep_maps.at(loc).end());
     return dep_ent->second;
   }
@@ -279,25 +280,41 @@ void template_gen_rec_summaryt::create_dep_map(
   if(!options.get_bool_option("context-sensitive")) return;
   ssa_domaint::def_mapt cur_def_map=SSA.ssa_analysis[cur_node.location].def_map;
   rec_dep_mapt &cur_dep_map=dep_maps[cur_node.location];
-  for(auto& def_ent:cur_def_map)
+  //std::cout<<cur_node.location->location_number<<"\n";////////////////////////////
+  for(auto& def_ent:cur_def_map)//create dep entry from def map
   {
-    local_SSAt::locationt last_modified_loc=def_ent.second.source;
+    local_SSAt::locationt last_loc=def_ent.second.def.loc;
+    //std::cout<<def_ent.first<<":      "<<last_loc->location_number<<"\n";/////////////
     if(id2string(def_ent.first).find("#return_value")!=std::string::npos)
+    {
       cur_dep_map.insert(std::make_pair(def_ent.first,true));//if it is return value
+      //std::cout<<cur_node.location->location_number<<"::"<<def_ent.first<<"\n";/////////////
+    }
     else if(cur_node.location->location_number!=
        SSA.nodes.front().location->location_number &&//if current location is not 0
-       last_modified_loc->location_number!=
-       SSA.nodes.front().location->location_number &&
-       last_modified_loc!=cur_node.location)//if last modified location is not 0
+       last_loc->location_number!=
+       SSA.nodes.front().location->location_number &&//if last modified location is not 0
+       last_loc!=cur_node.location)
     {
-      rec_dep_mapt prev_dep_map=dep_maps[last_modified_loc];
+      rec_dep_mapt prev_dep_map=dep_maps[last_loc];
       rec_dep_mapt::iterator prev_dep_ent=prev_dep_map.find(def_ent.first);
-      assert(prev_dep_ent!=prev_dep_map.end());
-      cur_dep_map.insert(std::make_pair(
-        def_ent.first, prev_dep_ent->second));//depends on previous
+      //std::cout<<id2string(prev_dep_ent->first)<<std::endl;//////////////////
+      if(prev_dep_ent!=prev_dep_map.end())
+      {
+        cur_dep_map.insert(std::make_pair(
+          prev_dep_ent->first, prev_dep_ent->second));//depends on previous
+        //std::cout<<prev_dep_ent->first<<":"<<last_loc->location_number<<"\n";//////////
+      }
+//      else
+//      {
+//        cur_dep_map.insert(std::make_pair(def_ent.first,false));//no dependency
+//      }
     }
     else
+    {
       cur_dep_map.insert(std::make_pair(def_ent.first,false));//no dependency
+      //std::cout<<def_ent.first<<":"<<last_loc->location_number<<"\n";///////////////////
+    }
   }
   if(cur_node.location->location_number==
        SSA.nodes.front().location->location_number) return;
@@ -310,17 +327,22 @@ void template_gen_rec_summaryt::create_dep_map(
       continue;
     }
     if(eq.lhs().id()==ID_symbol && 
-       cur_dep_map.find(get_original_name(to_symbol_expr(eq.lhs())))!=cur_dep_map.end())
+       cur_def_map.find(get_original_name(to_symbol_expr(eq.lhs())))!=cur_def_map.end())
     {
       irep_idt lhs_name=
          get_original_name(to_symbol_expr(eq.lhs()));
-      if(cur_def_map.find(lhs_name)!=cur_def_map.end())
-      {
+//      if(cur_dep_map.find(lhs_name)!=cur_dep_map.end())
+//      {
+        //std::cout<<"expr:"<<from_expr(eq.rhs())<<std::endl;
         cur_dep_map[lhs_name]=
           get_dependency_for_rhs(eq.rhs(),cur_node.location);//for all operands in rhs check dependency
-      }
+      //}
     }
   }
+  /*for(auto& dep_ent:cur_dep_map)
+  {
+    std::cout<<dep_ent.first<<":"<<dep_ent.second<<"\n";
+  }*/
 }
 
 bool template_gen_rec_summaryt::get_args_dep( 

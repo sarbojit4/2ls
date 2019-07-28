@@ -279,10 +279,10 @@ bool strategy_solver_binsearcht::iterate_for_ins(invariantt &_inv,
 
   exprt inv_expr=tpolyhedra_domain.to_pre_constraints(inv,true);
 
-//#if 0
+#if 0
   debug() << "improvement check: " << eom;
   debug() << "pre-inv: " << from_expr(ns, "", inv_expr) << eom;
-//#endif
+#endif
 
   solver << inv_expr;
 
@@ -292,34 +292,34 @@ bool strategy_solver_binsearcht::iterate_for_ins(invariantt &_inv,
 
   strategy_cond_literals.resize(strategy_cond_exprs.size());
 
-//#if 0
+#if 0
   debug() << "post-inv: ";
-//#endif
+#endif
 
   for(std::size_t i=0; i<strategy_cond_exprs.size(); i++)
   {
-//#if 0
+#if 0
     debug() << (i>0 ? " || " : "") << from_expr(ns, "", strategy_cond_exprs[i]);
-//#endif
+#endif
     strategy_cond_literals[i]=solver.convert(strategy_cond_exprs[i]);
     // solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i]=literal_exprt(strategy_cond_literals[i]);
   }
-//#if 0
+#if 0
   debug() << eom;
-//#endif
+#endif
 
   solver << disjunction(strategy_cond_exprs);
 
-//#if 0
+#if 0
   debug() << "solve(): ";
-//#endif
+#endif
 
   if(solver()==decision_proceduret::D_SATISFIABLE) // improvement check
   {
-//#if 0
+#if 0
     debug() << "SAT" << eom;
-//#endif
+#endif
 
 #if 0
     for(std::size_t i=0; i<solver.formula.size(); i++)
@@ -386,11 +386,11 @@ bool strategy_solver_binsearcht::iterate_for_ins(invariantt &_inv,
 
     solver << post_inv_expr;
 
-//#if 0
+#if 0
     debug() << "symbolic value system: " << eom;
     debug() << "pre-inv: " << from_expr(ns, "", pre_inv_expr) << eom;
     debug() << "post-inv: " << from_expr(ns, "", post_inv_expr) << eom;
-//s#endif
+#endif
 
     while(tpolyhedra_domain.less_than(lower, upper))
     {
@@ -403,25 +403,25 @@ bool strategy_solver_binsearcht::iterate_for_ins(invariantt &_inv,
       exprt c=
         tpolyhedra_domain.get_row_symb_value_constraint(row, middle, true);
 
-//#if 0
+#if 0
       debug() << "upper: " << from_expr(ns, "", upper) << eom;
       debug() << "middle: " << from_expr(ns, "", middle) << eom;
       debug() << "lower: " << from_expr(ns, "", lower) << eom;
-//#endif
+#endif
 
       solver.new_context(); // binary search iteration
 
-//#if 0
+#if 0
       debug() << "constraint: " << from_expr(ns, "", c) << eom;
-//#endif
+#endif
 
       solver << c;
 
       if(solver()==decision_proceduret::D_SATISFIABLE)
       {
-//#if 0
+#if 0
         debug() << "SAT" << eom;
-//#endif
+#endif
 
 #if 0
         for(std::size_t i=0; i<tpolyhedra_domain.template_size(); i++)
@@ -450,9 +450,9 @@ bool strategy_solver_binsearcht::iterate_for_ins(invariantt &_inv,
       }
       else
       {
-//#if 0
+#if 0
         debug() << "UNSAT" << eom;
-//#endif
+#endif
 
 #if 0
         for(std::size_t i=0; i<solver.formula.size(); ++i)
@@ -480,9 +480,9 @@ bool strategy_solver_binsearcht::iterate_for_ins(invariantt &_inv,
   }
   else
   {
-//#if 0
+#if 0
     debug() << "UNSAT" << eom;
-//#endif
+#endif
 
 #ifdef DEBUG_FORMULA
     for(std::size_t i=0; i<solver.formula.size(); ++i)

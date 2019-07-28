@@ -119,13 +119,28 @@ bool summarizer_baset::check_call_reachable(
   solver.new_context();
   solver << SSA.get_enabling_exprs();
   solver << precondition;
+  switch(solver())
+  {
+  case decision_proceduret::D_SATISFIABLE:
+  {
+    reachable=true;
+    debug() << "Call is reachable" << eom;
+    break;
+  }
+  case decision_proceduret::D_UNSATISFIABLE:
+  {
+    debug() << "Call is not reachable" << eom;
+    break;
+  }
+  default: assert(false); break;
+  }
   solver << ssa_inliner.get_summaries(SSA);
 
   symbol_exprt guard=SSA.guard_symbol(n_it->location);
   ssa_unwinder.get(function_name).unwinder_rename(guard, *n_it, false);
   solver << guard;
 
-#if 0
+#if 1
   std::cout << "guard: " << from_expr(SSA.ns, "", guard) << std::endl;
   std::cout << "enable: " << from_expr(SSA.ns, "", SSA.get_enabling_exprs())
             << std::endl;

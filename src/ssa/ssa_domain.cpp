@@ -136,10 +136,15 @@ void ssa_domaint::transform(
     def_map.erase(id);
   }
 
+  //std::cout<<"DEF---------------------\n";
   // update source in all defs
   for(def_mapt::iterator
       d_it=def_map.begin(); d_it!=def_map.end(); d_it++)
+  {
     d_it->second.source=from;
+    //std::cout<<"id: "<<id2string(d_it->first)<<"\n";
+  }
+  //std::cout<<"---------------------------\n";
 }
 
 /*******************************************************************\
